@@ -1,0 +1,180 @@
+---
+title: "Time Series HW 1"
+author: "Akshay Kumar Varanasi (av32826)"
+date: "February 5, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+**Question 1**
+
+a) Fit	an	AR(1)	model	to	the	data	using	methods	we	learnt	in	class.	Determine	
+the	maximum	likelihood	estimate	of	the	autoregressive	coefficient$\phi_1$	?,	
+variance	of	the	white	noise	in	the	AR(1)	model	and	the	variance	of	the	
+maximum	likelihood	estimate of	the	parameter $\phi_1$.
+
+```{r}
+
+## To read the data file
+library("xlsx")
+data<-read.xlsx("HW1_Problem1.xls",sheetIndex = 1, header=FALSE, stringsAsFactors=FALSE)
+
+## Hardcoding to find those parameters
+sum=0
+sum_sq=0
+mu=mean(data$X1)
+var_data=0
+
+## Before going forward to do the model fitting, we need to subtract the data by its mean
+data$X1<-data$X1-mu
+
+## Calculating Phi_1
+for (i in 1:49) {
+     sum = sum + ((data$X1[i])*(data$X1[i+1]))
+     sum_sq = sum_sq+((data$X1[i]))^2 #*(data$X1[i]))
+}
+phi_1=sum/sum_sq
+print(paste("The value of phi_1 is",prettyNum(phi_1)))
+
+## Calculating variance of white noise and phi_1
+for (i in 1:49) {
+  var_data=var_data+(data$X1[i+1]-phi_1*data$X1[i])^2
+}
+var_data=var_data/49
+var_phi=var_data/sum_sq
+
+print(paste("The value of variance of white noise is",prettyNum(var_data),"and that of phi_1 is",prettyNum(var_phi)))
+
+## In built function to fit data in AR model with order 1
+model<-ar.mle(x = data$X1, aic = FALSE, order.max = 1)
+
+## Prints out co-efficient and variance value of white noise
+model
+```
+```{r}
+
+data$time<-1:length(data$X1)
+data$predict<-rep(0,length(data$X1))
+#data_predicted<-data_frame()
+#data$predict<-predict(model, data$X1)
+
+#data$predict<-predict(model, data$X1, n.ahead = 1, se.fit = TRUE)
+for (i in 1:49) {
+  data$predict[i+1]=data$X1[i]*phi_1
+}
+
+plot.ts(data$X1, lwd=2, col="Blue", xlab="Time", ylab="Data")
+lines(x=data$time, y=data$predict, col='Red', lty=2 )  
+legend("topright", legend=c("Original", "Predicted"),
+       col=c("blue", "red"), lty=1:2, cex=0.8)
+```
+
+b) Comment	on	your	result?	What	kind	of	a	process	does	this	look	like?
+
+
+The process which we predicted is more or less stationary around a constant due to low value of phi. This is because the values are not dependent on previous values, i.e the fluctuations or the trend in actual data is mostly due to noise. 
+
+**Question 2**
+For	the	retail	sale	data	posted	on	the	class	website	(originating	form	
+before	the	economic	calamity	of	2007/2008),	please	do	the	following
+(a) Fit	a	line	passing	through	the	data	(first	order	polynomial	fit).	Use	regression	
+methods	used	in	class,	with	time	t being	indexed	from	0	to	length(data)-1	
+(month	is	the	unit	of	time)
+
+```{r}
+
+## Reading the data
+library("xlsx")
+data<-read.xlsx("Retail_Sales_Data.xlsx",sheetIndex = 1, header=FALSE, stringsAsFactors=FALSE)
+
+## Changing the column names for our convinience
+colnames(data)<-c("Year","Month","Sales")
+
+## Removing first 2 lines
+data_sub<-data[3:length(data$Year), ]
+
+## Converting the date and month to numbers
+data_sub$Time<-c(1:length(data_sub$Sales))
+
+## Creating a linear model relating Sales and time
+model<-lm(data_sub$Sales~data_sub$Time)
+summary(model)
+
+## Plotting the model 
+plot(fitted(model),residuals(model))
+
+## Predicted values
+pre_variables<-predict(model,data=data_sub$Time)
+
+## Plotting both original and predicted values
+plot.ts(data_sub$Sales, lwd=2, col="Blue", xlab="Time", ylab="Sales")
+lines(x=data_sub$Time, lwd=2, y=pre_variables, col='Red', lty=2)
+legend("topleft", legend=c("Original", "Predicted"),
+       col=c("blue", "red"), lty=1:2, cex=0.8)
+
+
+
+```
+
+
+(b) Calculate	residuals	after	you	removed	the	first	order	fit	and	then	fit an	
+autoregressive	model	of	order	2	– AR(2)	to	those residuals	(again,	months	
+are	units	of	time). Please	mark	the	residual	sum	of	squares	after	you	fitted	
+the	AR(2)	model.
+```{r}
+
+data_sub$Predicted<-pre_variables
+data_sub$Resdiuals<-as.numeric(data_sub$Sales)-as.numeric(data_sub$Predicted)
+
+# AR(2)
+res<-ar.ols(x = data_sub$Resdiuals, aic = FALSE, order.max = 2)
+res
+
+# Residual Sum of squares
+print(paste("The value of residual sum of squares for AR(2) is",prettyNum((length(data_sub$Year)-1)*res$var.pred)))
+
+#data_sub$Resdiuals_pre<-predict(res,data_sub$Resdiuals)
+#plot.ts(data_sub$Resdiuals)
+#lines(x=data_sub$Time,y=data_sub$Resdiuals_pre)
+```
+
+(c) Take	the	same	residuals	obtained	after	fitting	a	line	through	the	sales	data,	
+but	now	please	fit	an	AR(4)	model.	Once	again	mark	the	residual	sum	of	
+squares	after	you	fitted	the	AR(4)	model.
+
+```{r}
+
+# AR(4)
+
+res_4<-ar.ols(x = data_sub$Resdiuals, aic = FALSE, order.max = 4)
+res_4
+# Residual Sum of squares
+print(paste("The value of residual sum of squares for AR(4) is",prettyNum((length(data_sub$Year)-1)*res_4$var.pred)))
+```
+
+
+(d) Increase	the	order	of	the	AR(k)	model	by	fitting	AR(6),	AR(8),	AR(10)	and	so	
+on	models.	Do	this	until	you	fit	AR(20).	Please	plot	the	residual	sums	of	
+squares	of	these	models	as	you	increased	the	order	of	the	AR	models.	Please	
+comment	on	what	you	see
+
+```{r}
+res_sum_sq=rep(0L,10)
+for (i in seq(2,20,2)){
+  res<-ar.ols(x = data_sub$Resdiuals, aic = FALSE, order.max = i)
+
+  res_sum_sq[i/2]=res$var.pred*(length(data_sub$Year)-1)
+}
+res_sum<-data.frame(res_sum_sq)
+#res_sum$res_sum_sq<-res_sum_sq
+res_sum$model_num=seq(2,20,2)
+
+library(ggplot2)
+ggplot(res_sum,aes(x=res_sum$model_num, y=res_sum$res_sum_sq))+geom_point(aes(color = 'Red'),show.legend = FALSE)+geom_line(aes(color = 'green'),show.legend = FALSE)+xlab("Order")+ylab("Residual sum of squares")
+```
+
+
+
+From the plot, we can see how residual sum of squares drops off suddenly after some increase in order number then stays around that value as we increase further. It is because of as we increase number of variables to fit the fit becomes better. 
