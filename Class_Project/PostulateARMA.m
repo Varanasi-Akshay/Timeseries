@@ -31,8 +31,8 @@ m=mean(ts);
 ts=ts-m*ones(n1,n2);
 Cycle=1;
 
-Data=iddata(ts);
-
+Data_miss=iddata(ts);
+Data=misdata(Data_miss);
 %Initializing
 CurrentModel=armax(Data,[2 1]);
 n=1;
@@ -101,6 +101,7 @@ else
 end
 
 while Cycle
+      
     OldModel=CurrentModel;
     OldRSS=CurrentRSS;
     CurrMA=CurrMA-1;
@@ -121,6 +122,11 @@ while Cycle
         Model=OldModel;
         RSS=OldRSS;
     end
+    if CurrMA==0
+        Model=CurrentModel;
+        RSS=CurrentRSS;
+        break
+    end  
 end %Done
 
 r=resid(Model,Data);
