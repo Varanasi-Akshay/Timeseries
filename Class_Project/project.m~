@@ -210,17 +210,13 @@ yF = forecast(Model,y,31);
 MSE=27.09;
 [var,std_nstep]=variance_nstep(G,MSE);
 
-UB=yF + 1.96*std_nstep';
+UB=yF + 1.96*std_nstep;
 
-LB=yF - 1.96*std_nstep';
+LB=yF - 1.96*std_nstep;
 figure()
-plot(yF)
-hold on
-
 plot(full_data(train_size+1:train_size+31))
-
+hold on
+plot(yF)
 plot(UB)
 plot(LB)
-
-legend('Forecast data','Validation data','UB','LB')
 

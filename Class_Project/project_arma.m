@@ -3,16 +3,11 @@ clc; clear all; close all;
 % data = readtable('/home/akshay/Desktop/Timeseries/Class_Project/delhi-weather-data/testset.csv');
 % full_data = data.x_tempm;
 
+
 data = readtable('/home/akshay/Desktop/Timeseries/Class_Project/austin-weather/austin_weather.csv');
-full_data = data.TempAvgF;
-% per = 0.5;
-% train_size= round(per*size(full_data,1));
-% train_data= full_data(1:train_size);
-% y=train_data;
-
-
-% data = readtable('daily-min-temperatures.csv');
-% full_data = data.Temp;
+%full_data = data.TempAvgF;
+load('Detrended_data.mat')
+full_data=Res_full;
 
 % Removing nan
 full_data = full_data(~isnan(full_data));
@@ -78,6 +73,12 @@ end
 [AIC_opt_cpu_mem,n]=min(maic_cpu_mem);
 model_cpu_mem=sys_cpu_mem{n};
 
+
+% F-test
+P=0.95;
+[Model,res]=Multivariate_PostulateARMA(data_cpu_mem,P);
+model_cpu_mem=Model;
+
 %Step3: Fitting a ARMAV model for Memory using CPU as input
 data_mem_cpu=iddata(res_memory,res_cpu,1); %here one is the sampling rate
 %testing the models
@@ -94,6 +95,13 @@ end
 
 [AIC_opt_mem_cpu,n]=min(maic_mem_cpu);
 model_mem_cpu=sys_mem_cpu{n};
+
+
+% F-test
+P=0.95;
+[Model,res]=Multivariate_PostulateARMA(data_mem_cpu,P);
+model_mem_cpu=Model;
+
 
 fprintf('Selected Model for Temperature driven by Humidity')
 present(model_cpu_mem)
@@ -134,9 +142,9 @@ for i=1:length(test_data_cpu)
     input_mem=[input_mem;test_data_mem(i)];
 end
 
-std_cpu = sqrt(17.86);
+std_cpu = RMSE_train;
 
-std_mem = sqrt(59.8);
+std_mem = RMSE_train_mem;
 figure()
 plot(pred_cpu(1:20))
 hold on
@@ -155,5 +163,8 @@ plot(pred_mem(1:20)+1.96*std_mem)
 plot(pred_mem(1:20)-1.96*std_mem)
 legend('Forecast data','Validation data','UB','LB')
 
-
-save('armav.mat')
+%% Green function plot
+%  G=GreenFunction(Model,30);
+%  figure()
+%  plot(G)
+save('armav_detrended_Ftest.mat')

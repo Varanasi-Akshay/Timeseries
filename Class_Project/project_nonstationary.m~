@@ -233,23 +233,9 @@ legend('Forecast data','Validation data','UB','LB')
 %% Green function plot
  G=GreenFunction(Model,30);
  figure()
- plot(0:30,G)
+ plot(G,0:31)
 
-
-yF = forecast(Model,y,31);
-MSE=25.69;
-[var,std_nstep]=variance_nstep(G,MSE);
-yF=yF + pred_var_full(train_size+1:train_size+31);
-UB=yF + 1.96*std_nstep';
-
-LB=yF - 1.96*std_nstep';
-figure()
-plot(yF)
-hold on
-
-plot(full_data(train_size+1:train_size+31))
-
-plot(UB)
-plot(LB)
-
-legend('Forecast data','Validation data','UB','LB')
+% 
+% [yF,yMSE] = forecast(Model1,y,1);
+% UB = yF + 1.96*sqrt(yMSE);
+% LB = yF - 1.96*sqrt(yMSE);
