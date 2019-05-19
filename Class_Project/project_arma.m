@@ -145,6 +145,8 @@ end
 std_cpu = RMSE_train;
 
 std_mem = RMSE_train_mem;
+test_data_cpu=test_data_cpu+pred_var_full(train_size+1:end);
+pred_cpu=pred_cpu+pred_var_full(train_size+1:end);
 figure()
 plot(pred_cpu(1:20))
 hold on
@@ -153,6 +155,14 @@ plot(test_data_cpu(1:20),'Color','b')
 plot(pred_cpu(1:20)+1.96*std_cpu)
 plot(pred_cpu(1:20)-1.96*std_cpu)
 legend('Forecast data','Validation data','UB','LB')
+
+figure()
+plot(pred_cpu)
+hold on
+plot(test_data_cpu)
+legend('Forecast data','Validation data')
+
+forecastRSS = sum((test_data_cpu-pred_cpu).^2);
 
 figure()
 plot(pred_mem(1:20))

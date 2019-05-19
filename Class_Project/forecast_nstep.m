@@ -7,7 +7,7 @@ forecast_residuals = zeros(m-n,1);
 updating_data = y;
 for i= 1:m-n
     [yf yMSE] = forecast(model,updating_data,nstep);
-    forecast_data(i) = yf; 
+    forecast_data(i) = yf(nstep); 
     updating_data(n+i) = full_data(n+i); 
 
 end

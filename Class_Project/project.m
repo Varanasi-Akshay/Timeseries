@@ -224,3 +224,17 @@ plot(LB)
 
 legend('Forecast data','Validation data','UB','LB')
 
+nstep =7;
+[forecast_data7,forecast_residuals7]=forecast_nstep(Model,y,full_data,nstep);
+figure()
+plot(forecast_data7(1:end-7))
+hold on
+plot(full_data(train_size+7:end))
+legend('Forecast data','Validation data')
+std_data = sqrt(27.09);
+figure()
+plot(forecast_data(1:20))
+hold on
+plot(full_data(train_size+1:train_size+20))
+plot(forecast_data(1:20)+1.96*std_data)
+plot(forecast_data(1:20)-1.96*std_data)
